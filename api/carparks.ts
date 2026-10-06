@@ -3,7 +3,7 @@ import { Carpark, EVCharger } from '../src/types/index.ts';
 import { calculateDistanceMeters } from '../src/utils/geo.ts';
 import { matchCarparkRateDefinition } from '../src/data/carparkRates.ts';
 import { calculateParkingCost } from '../src/utils/rateCalculator.ts';
-import { assignBadgesAndSort, getFallbackCarparks, MBS_ANCHOR } from '../src/data/fallbackSnapshot.ts';
+import { assignBadgesAndSort, getFallbackCarparks } from '../src/data/fallbackSnapshot.ts';
 import { fetchEVChargersNearby } from './ev.ts';
 import { fetchLTACarparks } from './lta.ts';
 
@@ -26,10 +26,11 @@ export default async function carparksHandler(req: Request, res: Response) {
   let lat = parseFloat(latStr);
   let lng = parseFloat(lngStr);
 
-  // If coordinates are invalid, default to Marina Bay Sands
   if (isNaN(lat) || isNaN(lng)) {
-    lat = MBS_ANCHOR.latitude;
-    lng = MBS_ANCHOR.longitude;
+    return res.status(400).json({
+      error: 'Invalid coordinates',
+      message: 'Valid latitude and longitude query parameters are required to find nearby car parks.'
+    });
   }
 
   const headerKey =

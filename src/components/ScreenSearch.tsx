@@ -75,6 +75,8 @@ export default function ScreenSearch({ onSearch, initialParams }: ScreenSearchPr
   // Autocomplete states
   const [suggestions, setSuggestions] = useState<GeocodeResult[]>([]);
   const [isSearchingGeo, setIsSearchingGeo] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -134,6 +136,7 @@ export default function ScreenSearch({ onSearch, initialParams }: ScreenSearchPr
   // "Use my location" handler
   const handleUseMyLocation = () => {
     setGeoError(null);
+    setInputError(null);
     if (!navigator.geolocation) {
       setGeoError('Geolocation is not supported by your browser.');
       return;
@@ -156,15 +159,7 @@ export default function ScreenSearch({ onSearch, initialParams }: ScreenSearchPr
       (error) => {
         setLocatingUser(false);
         console.warn('Geolocation error:', error.message);
-        // Fallback friendly location if denied or unavailable in sandbox
-        setGeoError('Location access unavailable. Defaulted to Marina Bay Sands.');
-        const fallback = {
-          name: 'Marina Bay Sands',
-          latitude: 1.2842,
-          longitude: 103.8596
-        };
-        setDestinationQuery(fallback.name);
-        setSelectedLocation(fallback);
+        setGeoError('Location access was denied or unavailable. Please type your destination in the box above.');
       },
       { timeout: 7000, enableHighAccuracy: true }
     );
@@ -172,6 +167,7 @@ export default function ScreenSearch({ onSearch, initialParams }: ScreenSearchPr
 
   const handleSelectSuggestion = (item: GeocodeResult) => {
     setDestinationQuery(item.title);
+    setInputError(null);
     setSelectedLocation({
       name: item.title,
       latitude: item.latitude,
@@ -187,27 +183,45 @@ export default function ScreenSearch({ onSearch, initialParams }: ScreenSearchPr
     setDateLabel(formatSGDateLabel(target));
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    // If user typed destination without clicking suggestion, use top suggestion or fallback
+    const trimmed = destinationQuery.trim();
+    if (!trimmed) {
+      setInputError('Please enter a destination in Singapore (e.g. AMK Hub, Orchard Road, Tampines Mall).');
+      inputRef.current?.focus();
+      return;
+    }
+
     let finalLocation = selectedLocation;
-    if (!finalLocation) {
-      if (suggestions.length > 0) {
-        const top = suggestions[0];
-        finalLocation = {
-          name: top.title,
-          latitude: top.latitude,
-          longitude: top.longitude
-        };
-      } else {
-        // Default to Marina Bay Sands if query matches MBS or empty
-        finalLocation = {
-          name: destinationQuery.trim() || 'Marina Bay Sands',
-          latitude: 1.2842,
-          longitude: 103.8596
-        };
+
+    // If user hasn't selected from dropdown, or edited text since selecting, dynamically geocode their input
+    if (!finalLocation || finalLocation.name.toLowerCase() !== trimmed.toLowerCase()) {
+      setIsSubmitting(true);
+      setInputError(null);
+      try {
+        const resp = await fetch(`/api/geocode?q=${encodeURIComponent(trimmed)}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data.results) && data.results.length > 0) {
+            const top = data.results[0];
+            finalLocation = {
+              name: top.title || trimmed,
+              latitude: top.latitude,
+              longitude: top.longitude
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('Geocode submit error:', err);
+      } finally {
+        setIsSubmitting(false);
       }
+    }
+
+    if (!finalLocation) {
+      setInputError(`Could not find "${trimmed}" in Singapore. Please enter a valid mall, landmark, or address.`);
+      return;
     }
 
     onSearch({
@@ -241,17 +255,30 @@ export default function ScreenSearch({ onSearch, initialParams }: ScreenSearchPr
               type="text"
               autoComplete="off"
               value={destinationQuery}
-              onChange={(e) => setDestinationQuery(e.target.value)}
+              onChange={(e) => {
+                setDestinationQuery(e.target.value);
+                setInputError(null);
+                if (selectedLocation && selectedLocation.name.toLowerCase() !== e.target.value.toLowerCase()) {
+                  setSelectedLocation(null);
+                }
+              }}
               onFocus={() => {
                 if (suggestions.length > 0) setShowDropdown(true);
               }}
-              placeholder="e.g. Marina Bay Sands, Suntec, Bugis"
+              placeholder="Enter destination, mall, or address (e.g. AMK Hub, Orchard, Tampines)"
               className="w-full h-12 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-transparent transition-all"
             />
-            {isSearchingGeo && (
+            {(isSearchingGeo || isSubmitting) && (
               <Loader2 className="absolute right-3.5 w-4 h-4 text-slate-400 animate-spin" />
             )}
           </div>
+
+          {inputError && (
+            <p className="text-xs text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
+              <span aria-hidden="true">⚠️</span>
+              <span>{inputError}</span>
+            </p>
+          )}
 
           {/* Autocomplete Dropdown */}
           {showDropdown && suggestions.length > 0 && (
@@ -443,11 +470,21 @@ export default function ScreenSearch({ onSearch, initialParams }: ScreenSearchPr
         <div className="pt-2">
           <button
             type="button"
+            disabled={isSubmitting}
             onClick={() => handleSubmit()}
-            className="w-full h-12 rounded-xl bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-800 active:scale-[0.99] transition-all shadow-sm focus-visible:outline-2 focus-visible:outline-emerald-800"
+            className="w-full h-12 rounded-xl bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-800 disabled:opacity-75 active:scale-[0.99] transition-all shadow-sm focus-visible:outline-2 focus-visible:outline-emerald-800"
           >
-            <Search className="w-4 h-4" />
-            <span>Find parking</span>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Locating destination…</span>
+              </>
+            ) : (
+              <>
+                <Search className="w-4 h-4" />
+                <span>Find parking</span>
+              </>
+            )}
           </button>
         </div>
 

@@ -3,14 +3,6 @@ import { calculateDistanceMeters } from '../utils/geo.ts';
 import { matchCarparkRateDefinition } from './carparkRates.ts';
 import { calculateParkingCost } from '../utils/rateCalculator.ts';
 
-// Destination anchor: Marina Bay Sands (1.2842, 103.8596)
-export const MBS_ANCHOR = {
-  name: 'Marina Bay Sands',
-  latitude: 1.2842,
-  longitude: 103.8596,
-  address: '10 Bayfront Avenue, Singapore 018956'
-};
-
 export interface RawCarparkSnapshot {
   id: string;
   name: string;
@@ -421,8 +413,8 @@ function synthesizeLocalCarparks(
  * Builds full Carpark list with distance and cost calculation
  */
 export function getFallbackCarparks(
-  destLat: number = MBS_ANCHOR.latitude,
-  destLng: number = MBS_ANCHOR.longitude,
+  destLat: number,
+  destLng: number,
   dateStr: string = '2026-10-06',
   arrivalTimeStr: string = '09:30',
   durationHours: number = 2
