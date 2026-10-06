@@ -22,6 +22,98 @@ export function normaliseCarparkName(name: string): string {
  */
 export const CARPARK_RATES_DATABASE: CarparkRateDefinition[] = [
   {
+    normalisedName: 'amk hub',
+    name: 'AMK Hub',
+    aliases: ['ang mo kio hub', 'amkhub', '53 ang mo kio ave 3'],
+    publishedRateText: {
+      weekdays: '07:00-23:59: $1.70 for 1st hr, $0.85/subsequent 30 mins.',
+      saturday: '07:00-23:59: $1.80 for 1st hr, $0.95/subsequent 30 mins.',
+      sunday_ph: '07:00-23:59: $1.80 for 1st hr, $0.95/subsequent 30 mins.'
+    },
+    rules: [
+      { dayType: 'weekday', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.70 },
+      { dayType: 'weekday', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.85 },
+      { dayType: 'saturday', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.80 },
+      { dayType: 'saturday', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.95 },
+      { dayType: 'sunday_ph', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.80 },
+      { dayType: 'sunday_ph', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.95 },
+    ]
+  },
+  {
+    normalisedName: 'jubilee square',
+    name: 'Jubilee Square',
+    aliases: ['jubilee', '61 ang mo kio ave 8'],
+    publishedRateText: {
+      weekdays: '07:00-23:59: $1.60 for 1st hr, $0.80/subsequent 30 mins.',
+      saturday: '07:00-23:59: $1.80 for 1st hr, $0.90/subsequent 30 mins.',
+      sunday_ph: '07:00-23:59: $1.80 for 1st hr, $0.90/subsequent 30 mins.'
+    },
+    rules: [
+      { dayType: 'weekday', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.60 },
+      { dayType: 'weekday', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.80 },
+      { dayType: 'saturday', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.80 },
+      { dayType: 'saturday', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.90 },
+      { dayType: 'sunday_ph', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.80 },
+      { dayType: 'sunday_ph', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.90 },
+    ]
+  },
+  {
+    normalisedName: 'broadway plaza',
+    name: 'Broadway Plaza',
+    aliases: ['4190 ang mo kio ave 6'],
+    publishedRateText: {
+      weekdays: '07:00-23:59: $1.50 for 1st hr, $0.75/subsequent 30 mins.',
+      saturday: '07:00-23:59: $1.70 for 1st hr, $0.85/subsequent 30 mins.',
+      sunday_ph: '07:00-23:59: $1.70 for 1st hr, $0.85/subsequent 30 mins.'
+    },
+    rules: [
+      { dayType: 'weekday', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.50 },
+      { dayType: 'weekday', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.75 },
+      { dayType: 'saturday', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.70 },
+      { dayType: 'saturday', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.85 },
+      { dayType: 'sunday_ph', startTime: '07:00', endTime: '23:59', type: 'first_block', blockMinutes: 60, amountSGD: 1.70 },
+      { dayType: 'sunday_ph', startTime: '07:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.85 },
+    ]
+  },
+  {
+    normalisedName: 'junction 8',
+    name: 'Junction 8',
+    aliases: ['j8', 'bishan junction 8', '9 bishan place'],
+    publishedRateText: {
+      weekdays: '00:00-17:59: $1.60 for 1st hr, $0.40/subsequent 15 mins. 18:00-23:59: $2.60/entry.',
+      saturday: '00:00-23:59: $2.40 for 1st 2 hrs, $0.40/subsequent 15 mins.',
+      sunday_ph: 'Same as Saturday.'
+    },
+    rules: [
+      { dayType: 'weekday', startTime: '00:00', endTime: '18:00', type: 'first_block', blockMinutes: 60, amountSGD: 1.60 },
+      { dayType: 'weekday', startTime: '00:00', endTime: '18:00', type: 'subsequent_block', blockMinutes: 15, amountSGD: 0.40 },
+      { dayType: 'weekday', startTime: '18:00', endTime: '23:59', type: 'per_entry', blockMinutes: 360, amountSGD: 2.60 },
+      { dayType: 'saturday', startTime: '00:00', endTime: '23:59', type: 'first_block', blockMinutes: 120, amountSGD: 2.40 },
+      { dayType: 'saturday', startTime: '00:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 15, amountSGD: 0.40 },
+      { dayType: 'sunday_ph', startTime: '00:00', endTime: '23:59', type: 'first_block', blockMinutes: 120, amountSGD: 2.40 },
+      { dayType: 'sunday_ph', startTime: '00:00', endTime: '23:59', type: 'subsequent_block', blockMinutes: 15, amountSGD: 0.40 },
+    ]
+  },
+  {
+    normalisedName: 'nex',
+    name: 'NEX',
+    aliases: ['serangoon nex', '23 serangoon central'],
+    publishedRateText: {
+      weekdays: '07:00-18:00: $1.50 for 1st hr, $0.75/subsequent 30 mins. 18:00-07:00: $2.60/entry.',
+      saturday: '07:00-07:00: $1.70 for 1st hr, $0.85/subsequent 30 mins.',
+      sunday_ph: 'Same as Saturday.'
+    },
+    rules: [
+      { dayType: 'weekday', startTime: '07:00', endTime: '18:00', type: 'first_block', blockMinutes: 60, amountSGD: 1.50 },
+      { dayType: 'weekday', startTime: '07:00', endTime: '18:00', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.75 },
+      { dayType: 'weekday', startTime: '18:00', endTime: '07:00', type: 'per_entry', blockMinutes: 780, amountSGD: 2.60 },
+      { dayType: 'saturday', startTime: '07:00', endTime: '07:00', type: 'first_block', blockMinutes: 60, amountSGD: 1.70 },
+      { dayType: 'saturday', startTime: '07:00', endTime: '07:00', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.85 },
+      { dayType: 'sunday_ph', startTime: '07:00', endTime: '07:00', type: 'first_block', blockMinutes: 60, amountSGD: 1.70 },
+      { dayType: 'sunday_ph', startTime: '07:00', endTime: '07:00', type: 'subsequent_block', blockMinutes: 30, amountSGD: 0.85 },
+    ]
+  },
+  {
     normalisedName: 'marina bay sands',
     name: 'Marina Bay Sands',
     aliases: ['mbs', 'shoppes at marina bay sands', 'marina bay sands hotel', 'bayfront'],

@@ -5,6 +5,7 @@ import { matchCarparkRateDefinition } from '../src/data/carparkRates.ts';
 import { calculateParkingCost } from '../src/utils/rateCalculator.ts';
 import { assignBadgesAndSort, getFallbackCarparks, MBS_ANCHOR } from '../src/data/fallbackSnapshot.ts';
 import { fetchEVChargersNearby } from './ev.ts';
+import { fetchLTACarparks } from './lta.ts';
 
 // 1-minute LTA Carpark cache
 interface CarparkCacheEntry {
@@ -47,29 +48,18 @@ export default async function carparksHandler(req: Request, res: Response) {
         rawCarparks = carparkCache.data;
         isLive = true;
       } else {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
         try {
-          const resp = await fetch('https://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2', {
-            signal: controller.signal,
-            headers: {
-              'AccountKey': ltaKey,
-              'Accept': 'application/json'
-            }
+          const ltaData = await fetchLTACarparks({
+            accountKey: ltaKey,
+            fetchAll: true,
+            timeoutMs: 6000
           });
-          clearTimeout(timeoutId);
-
-          if (resp.ok) {
-            const json = await resp.json();
-            if (json && Array.isArray(json.value)) {
-              rawCarparks = json.value;
-              carparkCache = { timestamp: now, data: rawCarparks };
-              isLive = true;
-            }
+          if (ltaData && Array.isArray(ltaData.value) && ltaData.value.length > 0) {
+            rawCarparks = ltaData.value;
+            carparkCache = { timestamp: now, data: rawCarparks };
+            isLive = true;
           }
         } catch (fetchErr: any) {
-          clearTimeout(timeoutId);
           console.warn('LTA Carpark API failed or timed out:', fetchErr.message);
         }
       }
@@ -80,8 +70,8 @@ export default async function carparksHandler(req: Request, res: Response) {
       // 1. Filter LotType === 'C' (Cars only)
       const carLots = rawCarparks.filter(item => item.LotType === 'C' && item.Location);
 
-      // 2. Compute distance and filter within 1 km (1000m)
-      const within1km: any[] = [];
+      // 2. Compute distance and filter within 1.2 km (1200m)
+      const withinRadius: any[] = [];
       for (const item of carLots) {
         const parts = item.Location.trim().split(/\s+/);
         if (parts.length >= 2) {
@@ -89,8 +79,8 @@ export default async function carparksHandler(req: Request, res: Response) {
           const cLng = parseFloat(parts[1]);
           if (!isNaN(cLat) && !isNaN(cLng)) {
             const distMeters = calculateDistanceMeters(lat, lng, cLat, cLng);
-            if (distMeters <= 1000) {
-              within1km.push({
+            if (distMeters <= 1200) {
+              withinRadius.push({
                 ...item,
                 cLat,
                 cLng,
@@ -107,7 +97,7 @@ export default async function carparksHandler(req: Request, res: Response) {
       const parsedList: Carpark[] = [];
       const nowTimeString = new Date().toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-      for (const item of within1km) {
+      for (const item of withinRadius) {
         const name = item.Development || `Car Park ${item.CarParkID}`;
 
         // Link EV chargers within 100m
@@ -175,8 +165,7 @@ export default async function carparksHandler(req: Request, res: Response) {
       }
     }
 
-    // Fallback: If no LTA key, LTA error, or 0 car parks returned from LTA,
-    // load saved snapshot for Marina Bay Sands or nearby anchor
+    // Fallback: load verified snapshot or synthesized local carparks for the searched coordinates
     const fallbackList = getFallbackCarparks(lat, lng, dateStr, arrivalTime, durationHours);
     let finalFallback = fallbackList;
     if (needEV) {

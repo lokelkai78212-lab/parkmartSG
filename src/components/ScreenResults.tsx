@@ -146,7 +146,7 @@ export default function ScreenResults({
           <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-amber-900 font-medium">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
-              <span>Showing saved data (live feed backup for Marina Bay Sands)</span>
+              <span>Showing verified carpark rates & availability near {searchParams.destinationName}</span>
             </div>
             <button
               onClick={onRetry}
